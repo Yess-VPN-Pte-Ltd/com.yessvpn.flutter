@@ -1,4 +1,8 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,6 +11,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // Get battery level.
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -56,6 +61,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  static const platform = MethodChannel('com.yessvpn.flutter/channel');
 
   void _incrementCounter() {
     setState(() {
@@ -64,8 +70,32 @@ class _MyHomePageState extends State<MyHomePage> {
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
+
+
+      connect();
       _counter++;
     });
+  }
+
+
+  Future<void> connect() async {
+    String batteryLevel;
+    try {
+      final int result = await platform.invokeMethod('Connect',
+          "\"${"{\"log\": {}, \"dns\": {}, \"router\": {}, \"inbounds\": [{\"port\": 1080, \"protocol\": \"socks\", \"sniffing\": {\"enabled\": true, \"destOverride\": [\"http\", \"tls\"]}, \"settings\": {\"auth\": \"noauth\"}}], \"outbounds\": [{\"protocol\": \"shadowsocks\", \"settings\": {\"servers\": [{\"address\": \"64.176.52.98\", \"method\": \"aes-256-gcm\", \"ota\": true, \"password\": \"ChinaNumber_1\", \"port\": 10086}]}}], \"services\": {}}".replaceAll("\"", "\\\"")}\"");
+      batteryLevel = 'Battery level at $result % .';
+    } on PlatformException catch (e) {
+      batteryLevel = "Failed to get battery level: '${e.message}'.";
+    }
+  }
+
+  Future<void> setApplicationPath() async {
+    String batteryLevel;
+    try {
+      final int result = await  platform.invokeMethod("ApplicationPath", Platform.resolvedExecutable);
+    } on PlatformException catch (e) {
+      log("Failed to get battery level: '${e.message}'.");
+    }
   }
 
   @override
