@@ -2,17 +2,18 @@ package com.yessvpn.flutter.yess_vpn
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity : FlutterActivity() {
-    companion object
-
-    fun Connect() {
+    companion object fun Connect(config: String) {
         val intent: Intent = YessVPNService.prepare(this@MainActivity)
+        intent.putExtra("config", config);
         if (intent != null) {
+            Log.i(MainActivity.toString(), "Try start vpn service...")
             startActivityForResult(intent, 0)
         } else {
             onActivityResult(0, RESULT_OK, null)
@@ -32,12 +33,15 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         GeneratedPluginRegistrant.registerWith(flutterEngine)
-        val methodChannel: MethodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "toAndroid")
+        val methodChannel: MethodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.yessvpn.flutter/channel")
         methodChannel.setMethodCallHandler { call, result ->
             run {
+                Log.i(MainActivity.toString(), "Execute native method: " + call.method)
                 if (call.method != null) {
                     if ("Connect" == call.method) {
-                        result.success(Connect())
+                        Log.i(MainActivity.toString(), "Config json: " + call.arguments.toString())
+                        result.success(Connect(call.arguments.toString()))
+
                     }
                 } else {
                     result.notImplemented()
